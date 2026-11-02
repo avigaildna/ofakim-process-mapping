@@ -1,0 +1,612 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>מיפוי תהליכים חוצי אגפים</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700&family=Assistant:wght@400;600;700&display=swap">
+<style>
+/* Layout: a single municipal "work desk" column, three views under one tab bar; traffic-light state carried by shape + word + color. */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --surface-2:#e9eef2; --ink:#14232e; --muted:#4f6270; --line:#cfd8df;
+  --accent:#0f5c73; --accent-ink:#ffffff; --accent-soft:#d8eaef;
+  --red:#b3261e; --red-soft:#f9e1df; --yellow:#8a6100; --yellow-dot:#e0a400; --yellow-soft:#fbefd0; --green:#1d6b3a; --green-soft:#dcefe2;
+  --focus:#c25e00;
+  --f-display:"Rubik","Assistant",Arial,sans-serif; --f-body:"Assistant","Rubik",Arial,sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f171d; --surface:#16222a; --surface-2:#1d2c36; --ink:#e6eef3; --muted:#a3b6c2; --line:#2e414d;
+  --accent:#5fb3c9; --accent-ink:#06222b; --accent-soft:#1b3a45;
+  --red:#ff8a80; --red-soft:#3a1c1a; --yellow:#f2c14e; --yellow-dot:#f2c14e; --yellow-soft:#3a2f12; --green:#7fd49b; --green-soft:#16321f;
+  --focus:#ffb35c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f171d; --surface:#16222a; --surface-2:#1d2c36; --ink:#e6eef3; --muted:#a3b6c2; --line:#2e414d;
+  --accent:#5fb3c9; --accent-ink:#06222b; --accent-soft:#1b3a45;
+  --red:#ff8a80; --red-soft:#3a1c1a; --yellow:#f2c14e; --yellow-dot:#f2c14e; --yellow-soft:#3a2f12; --green:#7fd49b; --green-soft:#16321f;
+  --focus:#ffb35c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.55;margin:0}
+.wrap{direction:rtl;max-width:880px;margin:0 auto;padding-block:20px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);line-height:1.25;text-wrap:balance;margin:0}
+h1{font-size:1.75rem;font-weight:700}
+h2{font-size:1.3rem;font-weight:600}
+h3{font-size:1.08rem;font-weight:600}
+p{margin:0}
+.eyebrow{font-size:.85rem;color:var(--muted);letter-spacing:.02em;font-weight:600}
+header.top{display:grid;gap:6px;margin-bottom:18px}
+header.top .lede{color:var(--muted);max-width:62ch}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin-bottom:22px}
+nav.tabs button{font:600 1rem var(--f-display);background:none;border:0;color:var(--muted);padding:12px 14px;min-height:46px;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 18px;border-radius:var(--r);border:2px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.quiet{border-color:var(--line);background:var(--surface);color:var(--ink);font-weight:600}
+.btn.danger{border-color:var(--red);background:transparent;color:var(--red)}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.stack{display:grid;gap:18px}
+.note{background:var(--accent-soft);border-radius:var(--r);padding:12px 14px;font-size:.95rem}
+.warn{background:var(--yellow-soft);border-radius:var(--r);padding:12px 14px}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+
+/* form */
+fieldset{border:0;margin:0;padding:0;display:grid;gap:10px;min-width:0}
+legend{font-family:var(--f-display);font-weight:600;font-size:1.05rem;padding:0;margin-bottom:4px}
+label.field{display:grid;gap:6px;font-weight:600}
+.hint{font-weight:400;color:var(--muted);font-size:.92rem}
+input[type=text],select,textarea{width:100%;min-height:46px;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--r);background:var(--surface);font-size:1rem}
+textarea{min-height:92px;resize:vertical}
+.req{color:var(--red)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.chip span{display:inline-flex;align-items:center;min-height:42px;padding:8px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);font-weight:600;font-size:.95rem}
+.chip input:checked + span{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip input:focus-visible + span{outline:3px solid var(--focus);outline-offset:2px}
+.chip input:disabled + span{opacity:.45}
+.yn{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.lights{display:grid;gap:10px}
+.light{position:relative;display:block}
+.light input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.light .card{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:14px;border:2px solid var(--line);border-radius:12px;background:var(--surface)}
+.light input:checked + .card{border-color:currentColor;box-shadow:inset 0 0 0 1px currentColor}
+.light input:focus-visible + .card{outline:3px solid var(--focus);outline-offset:2px}
+.light.red{color:var(--red)} .light.yellow{color:var(--yellow)} .light.green{color:var(--green)}
+.light.red input:checked + .card{background:var(--red-soft)} .light.yellow input:checked + .card{background:var(--yellow-soft)} .light.green input:checked + .card{background:var(--green-soft)}
+.light .card b{font-family:var(--f-display);font-size:1.05rem}
+.light .card p{color:var(--ink);font-size:.95rem}
+.sig{width:30px;height:30px;flex:none}
+.steps{display:flex;gap:6px;align-items:center;font-size:.9rem;color:var(--muted);flex-wrap:wrap}
+.steps i{font-style:normal;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);font-weight:700;font-variant-numeric:tabular-nums}
+.steps .on i{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.steps .on{color:var(--ink);font-weight:600}
+.err{color:var(--red);font-weight:600}
+
+/* status pill */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 12px;border-radius:999px;font-weight:700;font-size:.88rem}
+.pill .sig{width:16px;height:16px}
+.pill.red{background:var(--red-soft);color:var(--red)} .pill.yellow{background:var(--yellow-soft);color:var(--yellow)} .pill.green{background:var(--green-soft);color:var(--green)}
+
+/* list */
+.tally{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tally div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:2px}
+.tally strong{font:700 1.6rem var(--f-display);font-variant-numeric:tabular-nums}
+.tally .red strong{color:var(--red)} .tally .yellow strong{color:var(--yellow)} .tally .green strong{color:var(--green)}
+.filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.proc{background:var(--surface);border:1px solid var(--line);border-inline-start:6px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px;min-width:0}
+.proc.red{border-inline-start-color:var(--red)} .proc.yellow{border-inline-start-color:var(--yellow-dot)} .proc.green{border-inline-start-color:var(--green)}
+.proc .head{display:flex;justify-content:space-between;gap:10px;align-items:start;flex-wrap:wrap}
+.proc dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:.95rem}
+.proc dt{color:var(--muted);font-weight:600}
+.proc dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.tag{display:inline-block;background:var(--surface-2);border-radius:6px;padding:1px 8px;margin:2px 0 2px 4px;font-size:.88rem;font-weight:600}
+.empty{text-align:center;padding:36px 16px;display:grid;gap:10px;justify-items:center}
+
+/* heat map */
+.tablewrap{overflow-x:auto}
+table.heat{border-collapse:separate;border-spacing:4px;width:100%;min-width:480px;font-variant-numeric:tabular-nums}
+table.heat th{font:600 .92rem var(--f-display);text-align:start;padding:6px 8px;color:var(--muted)}
+table.heat td{text-align:center;padding:10px 6px;border-radius:8px;font-weight:700;background:var(--surface-2)}
+table.heat td.name{text-align:start;background:none;font-weight:600}
+table.heat td.total{background:none;color:var(--muted)}
+.pairs{display:grid;gap:8px}
+.pair{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;display:flex}
+.bar span{display:block;height:100%}
+footer{margin-top:40px;color:var(--muted);font-size:.85rem;display:grid;gap:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:560px){.tally{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr}h1{font-size:1.45rem}}
+@media (prefers-reduced-motion:no-preference){.proc,.panel{transition:border-color .15s}}
+/* v2: pipeline steps */
+.keybox{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.keybox div{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;padding:10px 12px;border-radius:10px;font-size:.92rem}
+.keybox .sig{width:22px;height:22px}
+.keybox .green{background:var(--green-soft);color:var(--green)}
+.keybox .yellow{background:var(--yellow-soft);color:var(--yellow)}
+.keybox .red{background:var(--red-soft);color:var(--red)}
+.keybox p{color:var(--ink)}
+.step{background:var(--surface);border:1.5px solid var(--line);border-inline-start:6px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:12px;min-width:0}
+.step.red{border-inline-start-color:var(--red)} .step.yellow{border-inline-start-color:var(--yellow-dot)} .step.green{border-inline-start-color:var(--green)}
+.sh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.sh .tools{display:flex;gap:6px;flex-wrap:wrap}
+.btn.sm{min-height:38px;padding:4px 12px;font-size:.9rem}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mini .light .card{grid-template-columns:1fr;justify-items:center;text-align:center;gap:4px;padding:10px 6px}
+.mini .light .card .sig{width:24px;height:24px}
+.mini .light .card b{font-size:.95rem}
+.flow{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 2px;align-items:stretch}
+.flow li{display:flex;align-items:center;gap:2px}
+.node{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;min-width:118px;max-width:210px;display:grid;gap:2px;font-size:.9rem;background:var(--surface);height:100%;align-content:start}
+.node.red{border-color:var(--red);background:var(--red-soft)} .node.yellow{border-color:var(--yellow-dot);background:var(--yellow-soft)} .node.green{border-color:var(--green);background:var(--green-soft)}
+.node .nt{display:flex;gap:6px;align-items:center}
+.node .nt .sig{width:18px;height:18px;flex:none}
+.node.red .nt .sig,.node.red .sw{color:var(--red)} .node.yellow .nt .sig,.node.yellow .sw{color:var(--yellow)} .node.green .nt .sig,.node.green .sw{color:var(--green)}
+.node .who{color:var(--muted);font-size:.82rem}
+.node .sw{font-weight:700;font-size:.82rem}
+.arrow{color:var(--muted);font-size:1.2rem;padding:0 2px}
+.notes{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:.93rem}
+.notes li{display:grid;gap:2px;padding:8px 10px;background:var(--surface-2);border-radius:8px}
+.dots{display:inline-flex;gap:3px;align-items:center;flex-wrap:wrap}
+.dots .sig{width:16px;height:16px}
+.dots .red{color:var(--red)} .dots .yellow{color:var(--yellow)} .dots .green{color:var(--green)}
+.redrow{display:grid;gap:3px;background:var(--surface);border:1px solid var(--line);border-inline-start:6px solid var(--red);border-radius:10px;padding:10px 14px}
+@media (max-width:560px){.keybox{grid-template-columns:1fr}.g2{grid-template-columns:1fr}}
+.sent{display:inline-block;border-radius:6px;padding:1px 8px;font-size:.85rem;font-weight:700}
+.sent.yes{background:var(--green-soft);color:var(--green)} .sent.no{background:var(--surface-2);color:var(--muted)}
+#sendMsg.ok{color:var(--green);font-weight:700} #sendMsg.bad{color:var(--red);font-weight:700}
+summary{cursor:pointer}
+</style>
+</head><body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="s-green" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="var(--surface)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="s-yellow" viewBox="0 0 24 24"><path d="M12 2.5l10 18H2z" fill="currentColor"/><rect x="11" y="9" width="2" height="6" rx="1" fill="var(--surface)"/><circle cx="12" cy="17.6" r="1.2" fill="var(--surface)"/></symbol>
+  <symbol id="s-red" viewBox="0 0 24 24"><path d="M8 2h8l6 6v8l-6 6H8l-6-6V8z" fill="currentColor"/><rect x="6.5" y="10.8" width="11" height="2.4" rx="1.2" fill="var(--surface)"/></symbol>
+</svg>
+<div class="wrap" lang="he" dir="rtl">
+  <header class="top">
+    <span class="eyebrow">אופקים 2035 | צמ"מ דיגיטציה ו־AI | קרן טייב ו־DNAidea</span>
+    <h1>מיפוי תהליכים חוצי אגפים</h1>
+    <p class="lede">אנחנו ממפים תהליכים שעוברים בין כמה אגפים ובסופם שירות לתושבת או לתושב, כדי לזהות באילו שלבים הם נתקעים ואיפה דיגיטציה יכולה לעזור. לכל תהליך מגדירים מה הוא, ואז מתארים את שלביו לפי הסדר ומסמנים לכל שלב אם הוא זורם, מתעכב או נתקע. אין ציון לתהליך כולו. המילוי לוקח כמה דקות לתהליך, ואין צורך בהרשמה.</p>
+  </header>
+  <div id="live" class="sr" aria-live="polite"></div>
+  <section class="stack" aria-label="מילוי תהליך">
+    <div id="stepper" class="steps" aria-hidden="true">
+      <span id="st1" class="on"><i>1</i> בדיקת התאמה</span><span>›</span>
+      <span id="st2"><i>2</i> הגדרת התהליך</span><span>›</span>
+      <span id="st3"><i>3</i> שלבי התהליך</span><span>›</span>
+      <span id="st4"><i>4</i> השלמות</span><span>›</span>
+      <span id="st5"><i>5</i> שליחה</span>
+    </div>
+
+    <div id="screen" class="panel stack">
+      <h2>האם התהליך מתאים למיפוי?</h2>
+      <p class="muted">בשלב הזה ממפים רק תהליכים פנים ארגוניים שעוברים בין אגפים ובסופם יש שירות לתושב. שתי שאלות קצרות:</p>
+      <fieldset>
+        <legend>1. האם בסוף התהליך תושבת, תושב או עסק מקבלים שירות, תשובה או אישור?</legend>
+        <div class="yn">
+          <label class="chip"><input type="radio" name="q1" id="q1y" value="yes"><span>כן</span></label>
+          <label class="chip"><input type="radio" name="q1" id="q1n" value="no"><span>לא</span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>2. האם בדרך מעורבים לפחות שני אגפים או מחלקות?</legend>
+        <div class="yn">
+          <label class="chip"><input type="radio" name="q2" id="q2y" value="yes"><span>כן</span></label>
+          <label class="chip"><input type="radio" name="q2" id="q2n" value="no"><span>לא, הכול נעשה אצלנו</span></label>
+        </div>
+      </fieldset>
+      <div id="notFit" class="warn" hidden>
+        <p><b>התהליך הזה לא נדרש למיפוי כרגע.</b> אנחנו מתמקדים בתהליכים שבהם יש מסירה בין אגפים ובסופם שירות לתושב, כי שם נמצאים רוב צווארי הבקבוק. אם יש לך תהליך אחר שעונה על שני התנאים, אפשר לחזור ולבחור שוב.</p>
+      </div>
+      <div class="row"><button class="btn" id="toForm" disabled>המשך למילוי</button></div>
+    </div>
+
+    <form id="form" class="stack" hidden novalidate>
+      <div class="panel stack" id="sec1">
+        <h2>הגדרת התהליך</h2>
+        <label class="field" for="f-title">שם התהליך <span class="req" aria-hidden="true">*</span>
+          <span class="hint">שם קצר שכולם יזהו. למשל: "החלפת מחזיקים בנכס"</span>
+          <input type="text" id="f-title" required maxlength="120" autocomplete="off">
+        </label>
+        <label class="field" for="f-owner">האגף שממלא <span class="req" aria-hidden="true">*</span>
+          <select id="f-owner" required></select>
+        </label>
+        <label class="field" for="f-ownerOther" id="ownerOtherWrap" hidden>שם האגף או המחלקה
+          <input type="text" id="f-ownerOther" maxlength="80">
+        </label>
+        <label class="field" for="f-service">איזה שירות מקבל התושב בסוף? <span class="req" aria-hidden="true">*</span>
+          <span class="hint">למשל: "חיוב ארנונה מעודכן על שם הדייר החדש"</span>
+          <input type="text" id="f-service" required maxlength="200">
+        </label>
+        <label class="field" for="f-start">איך התהליך מתחיל?
+          <select id="f-start">
+            <option value="">בחירה</option>
+            <option>פנייה של תושב באתר או באפליקציה</option>
+            <option>פנייה טלפונית למוקד</option>
+            <option>הגעה פיזית לקבלת קהל</option>
+            <option>מסמך או בקשה ממשרד ממשלתי או גורם חיצוני</option>
+            <option>יוזמה פנימית של אגף</option>
+            <option>אחר</option>
+          </select>
+        </label>
+        <label class="field" for="f-volume">בערך כמה פעמים בחודש התהליך מתרחש?
+          <select id="f-volume">
+            <option value="">לא ידוע</option>
+            <option>פחות מ־10</option><option>10 עד 50</option><option>50 עד 200</option><option>יותר מ־200</option><option>עונתי, בעיקר בתקופה מסוימת בשנה</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="panel stack" id="sec2">
+        <h2>שלבי התהליך</h2>
+        <p class="muted">תארו איך התהליך עובר מהפנייה ועד השירות לתושב, כמו צינור שעובר מגורם לגורם: למשל חתימה אחת, אחריה חתימה נוספת ואחריה העברה לאגף אחר. לכל שלב מסמנים אם הוא זורם, מתעכב או נתקע. אין ציון לתהליך כולו, רק לשלבים.</p>
+        <fieldset>
+          <legend>איך נוח לכם לתאר את התהליך?</legend>
+          <div class="yn">
+            <label class="chip"><input type="radio" name="mode" id="md-s" value="steps" checked><span>שלב אחרי שלב (מומלץ)</span></label>
+            <label class="chip"><input type="radio" name="mode" id="md-f" value="free"><span>טקסט חופשי</span></label>
+          </div>
+        </fieldset>
+
+        <div id="stepsBox" class="stack">
+          <div class="keybox" role="group" aria-label="מקרא הרמזור">
+            <div class="green"><svg class="sig" aria-hidden="true"><use href="#s-green"/></svg><p><b>ירוק, זורם:</b> השלב מסתיים מהר ובלי המתנה.</p></div>
+            <div class="yellow"><svg class="sig" aria-hidden="true"><use href="#s-yellow"/></svg><p><b>צהוב, מתעכב:</b> לפעמים ממתינים, רודפים או משלימים חומרים.</p></div>
+            <div class="red"><svg class="sig" aria-hidden="true"><use href="#s-red"/></svg><p><b>אדום, נתקע:</b> כאן התהליך נתקע או לוקח הכי הרבה זמן.</p></div>
+          </div>
+          <div id="stepsList" class="stack"></div>
+          <div class="row"><button class="btn ghost" type="button" id="addStep">הוספת שלב</button></div>
+        </div>
+
+        <div id="freeBox" class="stack" hidden>
+          <label class="field" for="f-desc">תיאור התהליך מתחילתו ועד סופו <span class="req" aria-hidden="true">*</span>
+            <span class="hint">מי עושה מה ובאיזה סדר, ולמי זה עובר אחר כך. אפשר לפרט כמה שצריך.</span>
+            <textarea id="f-desc" maxlength="2500"></textarea>
+          </label>
+          <fieldset>
+            <legend>אילו אגפים מעורבים? <span class="req" aria-hidden="true">*</span></legend>
+            <span class="hint">אפשר לבחור כמה. האגף שממלא כבר נכלל.</span>
+            <div class="chips" id="divChips"></div>
+            <label class="field" for="f-divOther" id="divOtherWrap" hidden>אגף נוסף שלא ברשימה
+              <input type="text" id="f-divOther" maxlength="80">
+            </label>
+          </fieldset>
+          <label class="field" for="f-stuck">באיזה שלב התהליך נתקע או לוקח הכי הרבה זמן?
+            <span class="hint">כתבו מה השלב, מי מטפל בו ומה גורם לעיכוב</span>
+            <textarea id="f-stuck" maxlength="1500"></textarea>
+          </label>
+        </div>
+
+        <label class="field" for="f-extra">הערות נוספות: סדר אחר, מסלולים חלופיים או חריגים
+          <span class="hint">למשל: "אם חסרים מסמכים התהליך חוזר לשלב 2", או "בעסקים יש שלב נוסף של רישוי"</span>
+          <textarea id="f-extra" maxlength="1500"></textarea>
+        </label>
+      </div>
+
+      <div class="panel stack" id="sec3">
+        <h2>השלמות</h2>
+        <label class="field" for="f-systems">באילו מערכות משתמשים בתהליך?
+          <span class="hint">אם יודעים. למשל: מערכת הגבייה, CRM, GIS, מערכת של משרד ממשלתי</span>
+          <input type="text" id="f-systems" maxlength="200">
+        </label>
+        <label class="field" for="f-idea">יש רעיון לשיפור?
+          <textarea id="f-idea" maxlength="1000"></textarea>
+        </label>
+        <label class="field" for="f-filler">שם הממלא/ת ותפקיד
+          <span class="hint">כדי שנוכל לחזור אליך עם שאלות</span>
+          <input type="text" id="f-filler" maxlength="120">
+        </label>
+      </div>
+
+      <p id="formErr" class="err" role="alert" hidden></p>
+      <div class="row">
+        <button class="btn" type="submit" id="saveBtn">שמירת התהליך</button>
+        <button class="btn quiet" type="button" id="cancelBtn">ביטול</button>
+        <span id="editNote" class="muted small" hidden>עריכת תהליך קיים</span>
+      </div>
+    </form>
+
+    <div id="done" class="panel stack" hidden>
+      <h2 id="doneTitle" tabindex="-1">התהליך נוסף לרשימה שלך</h2>
+      <p class="muted">אפשר למלא עוד תהליכים, ובסוף לשלוח את כולם יחד בלחיצה אחת.</p>
+      <div class="row"><button class="btn" type="button" id="anotherBtn">הוספת תהליך נוסף</button><a class="btn ghost" href="#mine" id="toMine">לשליחת התהליכים</a></div>
+    </div>
+  </section>
+
+  <section id="mine" class="panel stack" aria-labelledby="mineTitle">
+    <h2 id="mineTitle">התהליכים שמילאתי <span id="mineCount"></span></h2>
+    <div id="mineList" class="stack"></div>
+    <div id="sendBox" class="stack" hidden>
+      <div class="note" id="noteLive">
+        <b>איך שולחים?</b> לוחצים על "שליחה לצוות DNAidea", והתהליכים נשמרים אצלנו ונוספים למפה המשותפת. אפשר להמשיך למלא ולשלוח שוב: בכל שליחה נשלחים רק תהליכים חדשים או כאלה שנערכו.
+      </div>
+      <div class="row" id="sendRow"><button class="btn" type="button" id="sendBtn">שליחה לצוות DNAidea</button><span id="sendMsg" class="small" role="status"></span></div>
+      <input type="text" id="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="sr">
+      <details id="copyFallback">
+        <summary class="small">השליחה לא עובדת? אפשר להעתיק ולשלוח במייל או בווטסאפ</summary>
+        <div class="stack" style="margin-top:12px">
+          <div class="note">לוחצים על "העתקת התהליכים", מדביקים בהודעת מייל או ווטסאפ ושולחים לצוות DNAidea, לכתובת שממנה קיבלתם את הטופס.</div>
+          <div class="row"><button class="btn quiet" type="button" id="copyAll">העתקת התהליכים</button><span id="copyMsg" class="small muted" role="status"></span></div>
+          <textarea id="copyText" readonly aria-label="טקסט התהליכים לשליחה" style="min-height:180px" hidden></textarea>
+        </div>
+      </details>
+      <p class="small muted">עד השליחה התהליכים שמורים רק בדפדפן הזה. אחרי שליחה מוצלחת אפשר לנקות את הרשימה.</p>
+      <div class="row"><button class="btn danger" type="button" id="clearAll">ניקוי הרשימה אחרי שליחה</button></div>
+    </div>
+  </section>
+
+<details class="panel">
+      <summary><b>דוגמה למילוי</b> <span class="muted small">(להמחשה בלבד)</span></summary>
+      <div class="stack" style="margin-top:12px">
+        <p class="small"><b>החלפת מחזיקים בנכס.</b> שירות בסוף: חיוב ארנונה מעודכן על שם הדייר החדש.</p>
+        <div id="exampleFlow"></div>
+        <p class="small muted">הדוגמה נועדה רק להראות את רמת הפירוט. היא לא נשמרת במפה.</p>
+      </div>
+    </details>
+
+  <footer>
+    <span>הכלי נבנה עבור צמ"מ דיגיטציה ו־AI בעיריית אופקים, בליווי חברת DNAidea ובשותפות קרן טייב.</span>
+    <span>אין להזין בכלי פרטים אישיים של תושבים.</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ===== הגדרה: כתובת ה־Web app של Google Apps Script ===== */
+const ENDPOINT="PASTE_SCRIPT_URL_HERE";
+const SOURCE_TAG="ofakim-pf";
+const LIVE=/^https:\/\/script\.google\.com\//.test(ENDPOINT);
+const DK="pf-draft-v2",LK="pf-list-v2",SAVE_LABEL="הוספה לרשימה שלי";
+let mine=[];let memOnly=false;
+const DIVISIONS=["שירות לתושב ומוקד","גבייה וארנונה","גזברות וכספים","הנדסה","פיתוח אורבני","מערכות מידע ודיגיטציה","חינוך","רווחה","תפעול ושפ\"ע","רישוי עסקים","לשכה משפטית","דוברות","קהילה","משאבי אנוש"];
+const NONDIV=["תושב/ת או עסק","גורם חיצוני","אחר"];
+const ACTORS=DIVISIONS.concat(NONDIV);
+const CHANNELS=["מערכת משותפת","מייל","טלפון","ווטסאפ","נייר או מסירה פיזית","הקלדה מחדש במערכת אחרת","פגישה","אחר"];
+const DURS=["עד כמה שעות","יום עבודה","כמה ימים","שבוע ויותר","משתנה מאוד"];
+const ST={red:"אדום",yellow:"צהוב",green:"ירוק"};
+const PL={red:"אדום: נתקע",yellow:"צהוב: מתעכב",green:"ירוק: זורם"};
+const SW={red:"נתקע",yellow:"מתעכב",green:"זורם"};
+const ORDER=["red","yellow","green"];
+const $=id=>document.getElementById(id);
+const EXAMPLE=[
+  {name:"הגשת בקשה ומסמכים",actor:"שירות לתושב ומוקד",duration:"יום עבודה",channel:"מערכת משותפת",status:"green",note:""},
+  {name:"בדיקת המסמכים",actor:"שירות לתושב ומוקד",duration:"כמה ימים",channel:"מייל",status:"yellow",note:"לעיתים חסרים מסמכים, והתושב נדרש להשלים"},
+  {name:"עדכון החיוב",actor:"גבייה וארנונה",duration:"שבוע ויותר",channel:"הקלדה מחדש במערכת אחרת",status:"red",note:"הבקשה מחכה בתור עד שמקלידים אותה מחדש"},
+  {name:"שליחת אישור לתושב",actor:"גבייה וארנונה",duration:"יום עבודה",channel:"",status:"green",note:""}
+];
+let editingRef=null;let S=[];let uid=0;let lastIdx=[];
+
+function el(tag,attrs,...kids){const n=document.createElement(tag);if(attrs)for(const k in attrs){if(k==="class")n.className=attrs[k];else if(k==="text")n.textContent=attrs[k];else n.setAttribute(k,attrs[k]);}for(const c of kids){if(c==null)continue;n.append(c.nodeType?c:document.createTextNode(String(c)));}return n;}
+function sig(s,cls){const ns="http://www.w3.org/2000/svg";const svg=document.createElementNS(ns,"svg");svg.setAttribute("class",cls||"sig");svg.setAttribute("aria-hidden","true");const u=document.createElementNS(ns,"use");u.setAttribute("href","#s-"+s);svg.append(u);return svg;}
+function pill(s){const p=el("span",{class:"pill "+s});p.append(sig(s),PL[s]||"");return p;}
+function say(t){$("live").textContent="";setTimeout(()=>{$("live").textContent=t},30);}
+function newPid(){return "p"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function norm(r){if(Array.isArray(r.steps))return r;return Object.assign({},r,{mode:"free",steps:[],extra:r.extra||(r.handoff?"מה עובר בין האגפים: "+r.handoff:"")});}
+function involved(r){r=norm(r);const s=new Set(r.divisions||[]);if(r.owner)s.add(r.owner);r.steps.forEach(x=>{if(x.actor&&!NONDIV.includes(x.actor))s.add(x.actor);});return[...s];}
+
+/* flow rendering (used in lists and in the example) */
+function flowEl(steps){
+  const wrap=el("div",{class:"stack",style:"gap:12px"});
+  const ol=el("ol",{class:"flow","aria-label":"שלבי התהליך לפי הסדר"});
+  steps.forEach((s,i)=>{
+    const li=el("li");const node=el("div",{class:"node "+(s.status||"")});
+    const top=el("div",{class:"nt"});if(s.status)top.append(sig(s.status));top.append(el("b",{text:(i+1)+". "+s.name}));
+    node.append(top);
+    const who=el("span",{class:"who",text:s.actor||""});node.append(who);
+    if(s.status)node.append(el("span",{class:"sw",text:SW[s.status]}));
+    li.append(node);if(i<steps.length-1)li.append(el("span",{class:"arrow","aria-hidden":"true",text:"←"}));
+    ol.append(li);
+  });
+  wrap.append(ol);
+  const items=steps.map((s,i)=>({s,i})).filter(x=>x.s.note||x.s.duration||x.s.channel);
+  if(items.length){
+    const ul=el("ul",{class:"notes"});
+    items.forEach(({s,i})=>{
+      const meta=[];if(s.duration)meta.push("משך: "+s.duration);if(s.channel)meta.push("עובר הלאה ב: "+s.channel);
+      const li=el("li");li.append(el("span",null,el("b",{text:"שלב "+(i+1)+": "+s.name}),meta.length?el("span",{class:"muted",text:" | "+meta.join(" | ")}):null));
+      if(s.note)li.append(el("span",{text:s.note}));ul.append(li);
+    });
+    wrap.append(ul);
+  }
+  return wrap;
+}
+function dotsEl(steps){const d=el("span",{class:"dots",role:"img","aria-label":steps.map((s,i)=>"שלב "+(i+1)+": "+(SW[s.status]||"לא סומן")).join(", ")});steps.forEach(s=>{if(s.status){const w=el("span",{class:s.status});w.append(sig(s.status));d.append(w);}});return d;}
+
+/* controls */
+const ownerSel=$("f-owner");ownerSel.append(el("option",{value:"",text:"בחירת אגף"}));DIVISIONS.forEach(d=>ownerSel.append(el("option",{value:d,text:d})));ownerSel.append(el("option",{value:"__other",text:"אחר"}));
+DIVISIONS.forEach((d,i)=>{const id="dv"+i;$("divChips").append(el("label",{class:"chip",for:id},el("input",{type:"checkbox",id,value:d,name:"divs"}),el("span",{text:d})));});
+$("divChips").append(el("label",{class:"chip",for:"dvOther"},el("input",{type:"checkbox",id:"dvOther",value:"__other",name:"divs"}),el("span",{text:"אחר"})));
+function syncOwnerChip(){document.querySelectorAll('input[name=divs]').forEach(c=>{const own=c.value===ownerSel.value;c.disabled=own;if(own)c.checked=false;});}
+ownerSel.addEventListener("change",()=>{$("ownerOtherWrap").hidden=ownerSel.value!=="__other";syncOwnerChip();scheduleDraft();});
+$("dvOther").addEventListener("change",()=>{$("divOtherWrap").hidden=!$("dvOther").checked;});
+
+/* mode */
+function curMode(){const c=document.querySelector('input[name=mode]:checked');return c?c.value:"steps";}
+function applyMode(){const m=curMode();$("stepsBox").hidden=m!=="steps";$("freeBox").hidden=m!=="free";}
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener("change",applyMode));
+
+/* steps editor */
+function blankStep(){return{name:"",actor:"",duration:"",channel:"",status:"",note:""};}
+function startSteps(){S=[blankStep(),blankStep(),blankStep()];}
+function field(label,ctrl,id,hint,req){const l=el("label",{class:"field",for:id},label);if(req){l.append(" ");l.append(el("span",{class:"req","aria-hidden":"true",text:"*"}));}if(hint)l.append(el("span",{class:"hint",text:hint}));l.append(ctrl);return l;}
+function selectOf(list,val,first){const s=el("select");s.append(el("option",{value:"",text:first}));list.forEach(x=>s.append(el("option",{value:x,text:x})));s.value=list.includes(val)?val:"";return s;}
+function renderSteps(focusI){
+  const L=$("stepsList");L.textContent="";
+  S.forEach((s,i)=>{
+    const u="sp"+(++uid);
+    const card=el("div",{class:"step "+(s.status||""),"data-i":String(i),role:"group","aria-label":"שלב "+(i+1)});
+    const up=el("button",{class:"btn quiet sm",type:"button",text:"הזזה למעלה"});if(i===0)up.disabled=true;
+    const dn=el("button",{class:"btn quiet sm",type:"button",text:"הזזה למטה"});if(i===S.length-1)dn.disabled=true;
+    const rm=el("button",{class:"btn danger sm",type:"button",text:"מחיקת השלב"});if(S.length<=1)rm.disabled=true;
+    up.addEventListener("click",()=>{const t=S[i-1];S[i-1]=S[i];S[i]=t;renderSteps(i-1);scheduleDraft();});
+    dn.addEventListener("click",()=>{const t=S[i+1];S[i+1]=S[i];S[i]=t;renderSteps(i+1);scheduleDraft();});
+    rm.addEventListener("click",()=>{S.splice(i,1);renderSteps(Math.max(0,i-1));scheduleDraft();});
+    card.append(el("div",{class:"sh"},el("h3",{text:"שלב "+(i+1)}),el("div",{class:"tools"},up,dn,rm)));
+    const name=el("input",{type:"text",id:u+"n",class:"sn",maxlength:"200",autocomplete:"off"});name.value=s.name;name.addEventListener("input",()=>{s.name=name.value;});
+    card.append(field("מה קורה בשלב הזה?",name,u+"n","למשל: חתימה של מנהל האגף, בדיקת מסמכים, הקלדה במערכת",true));
+    const actor=selectOf(ACTORS,s.actor,"בחירה");actor.id=u+"a";actor.addEventListener("change",()=>{s.actor=actor.value;});
+    const dur=selectOf(DURS,s.duration,"לא ידוע");dur.id=u+"d";dur.addEventListener("change",()=>{s.duration=dur.value;});
+    card.append(el("div",{class:"g2"},field("מי מטפל בשלב?",actor,u+"a",null,true),field("כמה זמן השלב לוקח בדרך כלל?",dur,u+"d")));
+    if(i<S.length-1){const ch=selectOf(CHANNELS,s.channel,"בחירה");ch.id=u+"c";ch.addEventListener("change",()=>{s.channel=ch.value;});card.append(field("איך זה עובר לשלב הבא?",ch,u+"c"));}
+    const fs=el("fieldset");fs.append(el("legend",null,"מצב השלב ",el("span",{class:"req","aria-hidden":"true",text:"*"})));
+    const mini=el("div",{class:"mini"});
+    [["green","זורם"],["yellow","מתעכב"],["red","נתקע"]].forEach(([v,t])=>{
+      const inp=el("input",{type:"radio",name:"stt-"+u,value:v,id:u+"s"+v});if(s.status===v)inp.checked=true;
+      inp.addEventListener("change",()=>{s.status=v;card.className="step "+v;});
+      mini.append(el("label",{class:"light "+v},inp,el("span",{class:"card"},sig(v),el("b",{text:t}))));
+    });
+    fs.append(mini);card.append(fs);
+    const note=el("textarea",{id:u+"t",maxlength:"500",style:"min-height:70px"});note.value=s.note;note.addEventListener("input",()=>{s.note=note.value;});
+    card.append(field("מה קורה כאן ולמה זה מתעכב או נתקע?",note,u+"t","חשוב במיוחד בשלבים צהובים ואדומים"));
+    L.append(card);
+  });
+  if(focusI!=null){const f=L.querySelector('[data-i="'+focusI+'"] .sn');if(f)f.focus();}
+}
+$("addStep").addEventListener("click",()=>{S.push(blankStep());renderSteps(S.length-1);});
+
+/* screening / stepper */
+function screenState(){const a=document.querySelector('input[name=q1]:checked'),b=document.querySelector('input[name=q2]:checked');const no=(a&&a.value==="no")||(b&&b.value==="no");$("notFit").hidden=!no;$("toForm").disabled=!(a&&b&&!no);}
+document.querySelectorAll('input[name=q1],input[name=q2]').forEach(r=>r.addEventListener("change",screenState));
+function setStep(n){for(let i=1;i<=5;i++)$("st"+i).classList.toggle("on",i<=n);}
+["sec1","sec2","sec3"].forEach((s,i)=>$(s).addEventListener("focusin",()=>setStep(i+2)));
+function resetScreen(){document.querySelectorAll('input[name=q1],input[name=q2]').forEach(r=>r.checked=false);screenState();setStep(1);}
+
+/* read / fill / validate */
+function readForm(){
+  const mode=curMode();
+  const owner=ownerSel.value==="__other"?$("f-ownerOther").value.trim():ownerSel.value;
+  const kept=[];lastIdx=[];
+  if(mode==="steps")S.forEach((s,i)=>{if(s.name.trim()||s.actor||s.status||s.note.trim()||s.duration){kept.push(s);lastIdx.push(i);}});
+  const steps=kept.map((s,i)=>({name:s.name.trim(),actor:s.actor,duration:s.duration,channel:i<kept.length-1?s.channel:"",status:s.status,note:s.note.trim()}));
+  let divs;
+  if(mode==="steps")divs=[...new Set(steps.map(s=>s.actor).filter(a=>a&&!NONDIV.includes(a)&&a!==owner))];
+  else{divs=[...document.querySelectorAll('input[name=divs]:checked')].map(c=>c.value).filter(v=>v!=="__other");if($("dvOther").checked&&$("f-divOther").value.trim())divs.push($("f-divOther").value.trim());}
+  const free=mode==="free";
+  return{v:2,mode,title:$("f-title").value.trim(),owner,service:$("f-service").value.trim(),start:$("f-start").value,volume:$("f-volume").value,
+    divisions:divs,steps,desc:free?$("f-desc").value.trim():"",stuck:free?$("f-stuck").value.trim():"",extra:$("f-extra").value.trim(),
+    systems:$("f-systems").value.trim(),idea:$("f-idea").value.trim(),filler:$("f-filler").value.trim()};
+}
+function fillForm(r0){
+  const r=norm(r0);
+  if(DIVISIONS.includes(r.owner)){ownerSel.value=r.owner;$("ownerOtherWrap").hidden=true;}else{ownerSel.value=r.owner?"__other":"";$("ownerOtherWrap").hidden=!r.owner;$("f-ownerOther").value=r.owner||"";}
+  ["title","service","desc","stuck","extra","systems","idea","filler"].forEach(k=>$("f-"+k).value=r[k]||"");
+  $("f-start").value=r.start||"";$("f-volume").value=r.volume||"";
+  const ds=r.divisions||[];document.querySelectorAll('input[name=divs]').forEach(c=>c.checked=ds.includes(c.value));
+  const extra=ds.filter(d=>!DIVISIONS.includes(d));$("dvOther").checked=extra.length>0;$("divOtherWrap").hidden=!extra.length;$("f-divOther").value=extra.join(", ");
+  $(r.mode==="free"?"md-f":"md-s").checked=true;applyMode();
+  S=(r.steps||[]).map(s=>Object.assign(blankStep(),s));while(S.length<3)S.push(blankStep());renderSteps();
+  syncOwnerChip();
+}
+function validate(d){
+  const m=[];
+  if(!d.title)m.push(["שם התהליך","#f-title"]);if(!d.owner)m.push(["האגף שממלא","#f-owner"]);if(!d.service)m.push(["השירות לתושב","#f-service"]);
+  if(d.mode==="steps"){
+    if(d.steps.length<2)m.push(["לפחות שני שלבים",'[data-i="0"] .sn']);
+    d.steps.forEach((s,i)=>{const sel='[data-i="'+lastIdx[i]+'"] ';
+      if(!s.name)m.push(["תיאור שלב "+(i+1),sel+".sn"]);
+      if(!s.actor)m.push(["מי מטפל בשלב "+(i+1),sel+"select"]);
+      if(!s.status)m.push(["סימון רמזור לשלב "+(i+1),sel+'input[type=radio]']);});
+  }else{
+    if(!d.desc)m.push(["תיאור התהליך","#f-desc"]);if(!d.divisions.length)m.push(["אגף מעורב","#dv0"]);
+  }
+  return m;
+}
+function showErrors(miss){const m=$("formErr");const shown=miss.slice(0,6).map(x=>x[0]).join(", ");m.textContent="חסר למלא: "+shown+(miss.length>6?" ועוד "+(miss.length-6):"");m.hidden=false;const f=document.querySelector(miss[0][1]);if(f)f.focus();}
+
+/* draft (per viewer convenience) */
+let draftTimer=null;
+function saveDraft(){if(editingRef!==null)return;try{localStorage.setItem(DK,JSON.stringify(readForm()));}catch(e){}}
+function scheduleDraft(){clearTimeout(draftTimer);draftTimer=setTimeout(saveDraft,600);}
+$("form").addEventListener("input",scheduleDraft);
+function loadDraft(){try{const d=JSON.parse(localStorage.getItem(DK)||"null");if(d&&(d.title||d.desc||(d.steps&&d.steps.length))){fillForm(d);return true;}}catch(e){}return false;}
+function clearDraft(){try{localStorage.removeItem(DK);}catch(e){}}
+function resetForm(){$("form").reset();editingRef=null;startSteps();renderSteps();applyMode();$("editNote").hidden=true;$("saveBtn").textContent=SAVE_LABEL;$("ownerOtherWrap").hidden=true;$("divOtherWrap").hidden=true;syncOwnerChip();$("formErr").hidden=true;}
+
+/* text export */
+function toText(d0,i){
+  const d=norm(d0);
+  const L=[i==null?"תהליך למפת התהליכים, צמ\"מ דיגיטציה":"תהליך "+(i+1)+":","שם: "+d.title,"אגף ממלא: "+d.owner,"שירות לתושב: "+d.service];
+  if(d.start)L.push("איך מתחיל: "+d.start);if(d.volume)L.push("היקף בחודש: "+d.volume);
+  if(d.mode==="steps"){L.push("שלבי התהליך:");d.steps.forEach((s,k)=>{const p=[(k+1)+". "+s.name];if(s.actor)p.push("מטפל: "+s.actor);if(s.status)p.push("מצב: "+SW[s.status]+" ("+ST[s.status]+")");if(s.duration)p.push("משך: "+s.duration);if(s.channel)p.push("עובר הלאה ב: "+s.channel);if(s.note)p.push("הערה: "+s.note);L.push("  "+p.join(" | "));});}
+  else{L.push("תיאור: "+d.desc);if(d.divisions.length)L.push("אגפים מעורבים: "+d.divisions.join(", "));if(d.stuck)L.push("איפה נתקע: "+d.stuck);}
+  if(d.extra)L.push("הערות, מסלולים חלופיים: "+d.extra);if(d.systems)L.push("מערכות: "+d.systems);if(d.idea)L.push("רעיון לשיפור: "+d.idea);if(d.filler)L.push("ממלא/ת: "+d.filler);
+  let code="";try{code=btoa(unescape(encodeURIComponent(JSON.stringify(d))));}catch(e){}
+  L.push("קוד:"+code);return L.join("\n");
+}
+
+startSteps();renderSteps();applyMode();
+if($("exampleFlow"))$("exampleFlow").append(flowEl(EXAMPLE));
+
+$("saveBtn").textContent=SAVE_LABEL;
+function store(){try{localStorage.setItem(LK,JSON.stringify(mine));}catch(e){memOnly=true;}}
+function load(){try{const v=JSON.parse(localStorage.getItem(LK)||"[]");if(Array.isArray(v))mine=v;mine.forEach(d=>{if(!d.pid)d.pid=newPid();});}catch(e){memOnly=true;}}
+function openForm(){$("screen").hidden=true;$("done").hidden=true;$("form").hidden=false;setStep(2);$("f-title").focus();}
+$("toForm").addEventListener("click",openForm);
+function backToScreen(){$("form").hidden=true;$("done").hidden=true;$("screen").hidden=false;resetScreen();}
+$("cancelBtn").addEventListener("click",()=>{resetForm();clearDraft();backToScreen();});
+$("form").addEventListener("submit",e=>{
+  e.preventDefault();const d=readForm();const miss=validate(d);
+  if(miss.length){showErrors(miss);return;}
+  $("formErr").hidden=true;
+  if(editingRef!==null){d.pid=mine[editingRef].pid||newPid();mine[editingRef]=d;}else{d.pid=newPid();mine.push(d);}
+  store();clearDraft();resetForm();renderMine();
+  $("form").hidden=true;$("done").hidden=false;setStep(5);$("doneTitle").focus();say("התהליך נוסף לרשימה");
+});
+$("anotherBtn").addEventListener("click",backToScreen);
+
+function allText(){return["תהליכים למפת התהליכים, צמ\"מ דיגיטציה ו־AI, אופקים",""].concat(mine.map((d,i)=>toText(d,i)+"\n")).join("\n");}
+$("copyAll").addEventListener("click",()=>{const t=$("copyText");t.value=allText();t.hidden=false;
+  const manual=()=>{t.focus();t.select();$("copyMsg").textContent="הטקסט מסומן. העתיקו אותו ידנית והדביקו בהודעה.";};
+  try{navigator.clipboard.writeText(t.value).then(()=>{$("copyMsg").textContent="הועתק. עכשיו מדביקים בהודעת מייל או ווטסאפ ושולחים.";say("הועתק");},manual);}catch(e){manual();}});
+$("clearAll").addEventListener("click",()=>{const b=$("clearAll");if(b.dataset.armed){mine=[];store();renderMine();delete b.dataset.armed;b.textContent="ניקוי הרשימה אחרי שליחה";$("copyText").hidden=true;$("copyMsg").textContent="";say("הרשימה נוקתה");}else{b.dataset.armed="1";b.textContent="לחצו שוב לאישור הניקוי";setTimeout(()=>{delete b.dataset.armed;b.textContent="ניקוי הרשימה אחרי שליחה";},4000);}});
+
+/* שליחה למסד הנתונים */
+function sendMsg(t,cls){const m=$("sendMsg");m.textContent=t;m.className="small"+(cls?" "+cls:"");}
+async function sendAll(){
+  const pending=mine.filter(d=>!d.sentAt);
+  if(!pending.length){sendMsg("כל התהליכים ברשימה כבר נשלחו.","ok");return;}
+  const btn=$("sendBtn");btn.disabled=true;sendMsg("שולחים...");
+  const items=pending.map(d=>{const c=Object.assign({},norm(d));delete c.sentAt;return c;});
+  const payload=JSON.stringify({source:SOURCE_TAG,submissionId:"s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),website:$("hp").value,items});
+  const opts={method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:payload};
+  let res="fail";
+  try{const r=await fetch(ENDPOINT,opts);const j=await r.json();res=j&&j.ok?"ok":"fail";}
+  catch(e){try{await fetch(ENDPOINT,Object.assign({mode:"no-cors"},opts));res="ok";}catch(e2){res="fail";}}
+  btn.disabled=false;
+  if(res==="ok"){const t=new Date().toISOString();pending.forEach(d=>d.sentAt=t);store();renderMine();sendMsg("נשלח, תודה! "+(pending.length===1?"התהליך נשמר":pending.length+" תהליכים נשמרו")+" אצל צוות DNAidea.","ok");say("התהליכים נשלחו");}
+  else{sendMsg("השליחה לא הצליחה. נסו שוב בעוד רגע, או השתמשו בהעתקה למטה.","bad");$("copyFallback").open=true;say("השליחה לא הצליחה");}
+}
+$("sendBtn").addEventListener("click",sendAll);
+if(!LIVE){$("noteLive").hidden=true;$("sendRow").hidden=true;$("copyFallback").open=true;}
+
+function renderMine(){
+  const L=$("mineList");L.textContent="";$("mineCount").textContent=mine.length?"("+mine.length+")":"";$("sendBox").hidden=!mine.length;
+  if(!mine.length){L.append(el("p",{class:"muted",text:"עוד לא הוספת תהליכים. כל תהליך שתמלאו יופיע כאן, ומכאן שולחים את כולם יחד."}));return;}
+  if(memOnly)L.append(el("p",{class:"warn small",text:"הדפדפן לא מאפשר שמירה. העתיקו ושלחו את התהליכים לפני שסוגרים את העמוד."}));
+  mine.forEach((r0,i)=>{
+    const r=norm(r0);
+    const card=el("article",{class:"proc"});
+    card.append(el("div",{class:"head"},el("h3",{text:r.title}),el("span",{class:"row",style:"gap:8px"},r.steps.length?dotsEl(r.steps):null,LIVE?el("span",{class:"sent "+(r0.sentAt?"yes":"no"),text:r0.sentAt?"נשלח":"טרם נשלח"}):null)));
+    const dl=el("dl");const add=(k,v)=>{if(!v||(Array.isArray(v)&&!v.length))return;const dd=el("dd");if(Array.isArray(v))v.forEach(x=>dd.append(el("span",{class:"tag",text:x})));else dd.textContent=v;dl.append(el("dt",{text:k}),dd);};
+    add("שירות לתושב",r.service);add("אגפים מעורבים",involved(r));if(r.mode==="free"){add("תיאור",r.desc);add("איפה נתקע",r.stuck);}
+    card.append(dl);if(r.steps.length)card.append(flowEl(r.steps));
+    const row=el("div",{class:"row"});const ed=el("button",{class:"btn quiet",type:"button",text:"עריכה"});
+    ed.addEventListener("click",()=>{resetForm();fillForm(r);editingRef=i;$("editNote").hidden=false;$("saveBtn").textContent="שמירת השינויים";openForm();});
+    const del=el("button",{class:"btn danger",type:"button",text:"מחיקה"});
+    del.addEventListener("click",()=>{if(del.dataset.armed){mine.splice(i,1);store();renderMine();say("התהליך נמחק");}else{del.dataset.armed="1";del.textContent="לחצו שוב כדי למחוק";setTimeout(()=>{if(del.isConnected){delete del.dataset.armed;del.textContent="מחיקה";}},4000);}});
+    row.append(ed,del);card.append(row);L.append(card);
+  });
+}
+load();renderMine();
+if(loadDraft()){$("screen").hidden=true;$("form").hidden=false;setStep(2);}
+
+})();
+</script>
+
+</body></html>
